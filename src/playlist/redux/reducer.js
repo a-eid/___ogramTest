@@ -1,22 +1,46 @@
 import {actions} from './actions';
+import produce from 'immer';
+
+import {PAGE_SIZE} from '../api';
 
 const initState = {
-  // people like to keep track of loading / error in redux
-  // it make sense in some cases but not in this one ..
+  page: 0,
   loading: false,
   error: null,
+  next: null,
   playlists: [],
+  track: {
+    // [id] => ...
+  },
 };
 
-export function reducer(state = initState, {payload, type}) {
+export const reducer = produce((draft = initState, {type, payload}) => {
   switch (type) {
     case actions.GET_PLAYLISTS:
-      return {
-        ...state,
-        playlists: [...state.playlists, ...payload],
-      };
+      draft.loading = true;
+      break;
+
+    case actions.GET_PLAYLISTS_SUCCESS:
+      draft.loading = false;
+      draft.playlists.push(...payload.items);
+      draft.error = null;
+      draft.next = payload.next;
+      if (payload.items.length > 0) draft.page = payload.offset / PAGE_SIZE + 1;
+      return draft;
+
+    case actions.GET_PLAYLISTS_ERROR:
+      draft.loading = false;
+      break;
+
+    case actions.GET_TRACK_SUCCESS:
+      draft.track[payload.id] = payload;
+      break;
+
+    case actions.GET_TRACK_ERROR:
+      //
+      break;
 
     default:
-      return state;
+      return draft;
   }
-}
+});

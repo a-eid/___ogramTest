@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-const PAGE_SIZE = 5;
+export const PAGE_SIZE = 5;
 const TOKEN =
-  'BQD1_ZM7pSAEAsGAGVLaheV7bmuXcB4R6vMKPB3ND7Z5DEVilvS2KmGCh-bFAGKWuFgvoTOECXK0MAri4t2VDcADQvJZTevmmtX2Qe_F5YB6ojxBYqAhOiPAO71Dwph55-z7IsUP-9O9ig';
+  'BQAixICE_YLRU73gSv4bY5J9YsUIpvr830t8xDh50IUwjCggcwBUDlbcFLhgeY18d0y5O9hCSv-AY-3NpXb3pAWLIdQN6caafw7w3DpgTVgRamJJdrc4KZ5ne4YHzuD5aQURFEVy4wIzBQ';
 
 axios.defaults.headers.authorization = `Bearer ${TOKEN}`;
 
@@ -14,6 +14,10 @@ export async function getPlaylists({page = 1} = {}) {
   return data.playlists;
 }
 
-export function getTracks({id}) {
-  return axios.get(`https://api.spotify.com/v1/playlists/${id}/tracks`);
+export async function getTracks({id}) {
+  const {data} = await axios.get(
+    `https://api.spotify.com/v1/playlists/${id}/tracks`,
+  );
+
+  return data;
 }

@@ -5,33 +5,24 @@ import {
   ActivityIndicator,
   FlatList,
   SafeAreaView,
+  StyleSheet,
 } from 'react-native';
+import {connect} from 'react-redux';
+import {InteractionManager} from 'react-native';
 
-import * as api from '../api';
+import {getTrack} from '../redux/actions';
 
-export function Atrists({route}) {
-  const [loading, setLoading] = React.useState(false);
-  const [artists, setArtists] = React.useState({});
+export function AtristsCmp({route, loading, artists = {}, getTrack}) {
   const {id} = route.params;
 
   React.useEffect(() => {
-    api
-      .getTracks({id})
-      .then(({data}) => {
-        const artists = data.items.reduce((memo, {track: {artists}}) => {
-          artists.forEach(artist => {
-            memo.id = artist;
-          });
-          return memo;
-        }, {});
-        setArtists(artists);
-      })
-      .catch(error => {});
+    InteractionManager.runAfterInteractions(() => {
+      getTrack(id);
+    });
   }, []);
 
   function renderItem({item: id}) {
-    const artist = artists[id];
-    return <ArtistItem id={id} artist={artist} />;
+    return <ArtistItem id={id} artist={artists[id]} />;
   }
 
   return (
@@ -42,15 +33,7 @@ export function Atrists({route}) {
         keyExtractor={item => item}
       />
 
-      <SafeAreaView
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          zIndex: 22,
-          justifyContent: 'center',
-        }}>
+      <SafeAreaView style={styles.loader}>
         <ActivityIndicator size="large" color="blue" animating={loading} />
       </SafeAreaView>
     </>
@@ -59,7 +42,7 @@ export function Atrists({route}) {
 
 const ArtistItem = React.memo(({id, artist}) => {
   return (
-    <View>
+    <View style={styles.artistsContainer}>
       <Text>{artist.name}</Text>
       <Text>{artist.type}</Text>
     </View>
@@ -69,3 +52,28 @@ const ArtistItem = React.memo(({id, artist}) => {
 function shouldRerender({id: pId}, {d: nId}) {
   return pId !== nId;
 }
+
+const styles = StyleSheet.create({
+  artistsContainer: {
+    borderWidth: StyleSheet.hairlineWidth * 2,
+    margin: 10,
+    borderColor: '#eee',
+  },
+  loader: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 22,
+    justifyContent: 'center',
+  },
+});
+
+function mapStateToProps({playlist: {track}}, props) {
+  return {
+    artists: track[props.route.params.id]?.artists,
+    loading: !(props.route.params.id in track),
+  };
+}
+
+export const Atrists = connect(mapStateToProps, {getTrack})(AtristsCmp);

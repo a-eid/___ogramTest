@@ -5,35 +5,17 @@ import {
   SafeAreaView,
   StyleSheet,
 } from 'react-native';
-import {useDispatch, useSelector} from 'react-redux';
+import {connect} from 'react-redux';
 import {useNavigation} from '@react-navigation/core';
 
-import {actions} from '../redux/actions';
-import * as api from '../api';
-
 import {PlaylistItem} from '../components/PlaylistItem';
+import {getPlaylist} from '../redux/actions';
 
-export function Playlist() {
+function PlaylistCmp({playlists, page, loading, getPlaylist, next}) {
   const navigation = useNavigation();
-  const playlists = useSelector(state => state.playlist.playlists);
-  const [loading, setLoading] = React.useState(false);
-  const [reachedEnd, setReachedEnd] = React.useState(false);
-  const [page, setPage] = React.useState(1);
-  const dispatch = useDispatch();
-
-  async function getPlaylists(page) {
-    try {
-      setLoading(true);
-      const playlist = await api.getPlaylists({page});
-      dispatch({type: actions.GET_PLAYLISTS, payload: playlist.items});
-      setLoading(false);
-      if (playlist.next === null) setReachedEnd(true);
-      console.log(playlist);
-    } catch (error) {}
-  }
 
   React.useEffect(() => {
-    getPlaylists(1);
+    getPlaylist(page + 1);
   }, []);
 
   function toDetails(id) {
@@ -45,11 +27,8 @@ export function Playlist() {
   }
 
   function handleEndReach() {
-    console.log('handleEndReach');
-    if (!loading && !reachedEnd) {
-      getPlaylists(page + 1);
-      setPage(page + 1);
-    }
+    console.log('here we goo');
+    if (!loading && next !== false) getPlaylist(page + 1);
   }
 
   return (
@@ -78,3 +57,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+
+function mapStateToProps({playlist}) {
+  const {playlists, page, loading, next} = playlist;
+  return {playlists, page, loading, next};
+}
+
+export const Playlist = connect(mapStateToProps, {getPlaylist})(PlaylistCmp);
